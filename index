@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chronological Tolkien</title>
+<meta name="description" content="Read or listen to Tolkien's Middle-earth books in story order: 168 steps across seven books, with page ranges for your editions.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tolkien">
+<meta name="theme-color" content="#f3f4f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121615" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column per tab; a fixed tab bar at the bottom; each step is a row with book chip, location, cues and meta */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --fg:#1d2422; --muted:#5d6763; --line:#d9ddd8; --accent:#2f5d55; --gold:#9a7420;
+  --S:#6a4c93; --C:#8a3b3b; --U:#2f6f86; --H:#5d7a2e; --F:#9a6a12; --T:#7a5a3a; --R:#3d5b8c;
+  --era1:#e6e9e4; --era2:#d9ded8;
+  --display:"Cinzel",Georgia,serif; --body:"Literata",Georgia,"Times New Roman",serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --navh:58px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121615; --surface:#1a201e; --fg:#e4e8e4; --muted:#9aa49f; --line:#2c3431; --accent:#7fb8ab; --gold:#d6b25e;
+  --S:#b59ae0; --C:#e08a8a; --U:#79bdd6; --H:#a9c975; --F:#e0b35a; --T:#cfa77e; --R:#93b2e6; --era1:#1f2624; --era2:#28302d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121615; --surface:#1a201e; --fg:#e4e8e4; --muted:#9aa49f; --line:#2c3431; --accent:#7fb8ab; --gold:#d6b25e;
+  --S:#b59ae0; --C:#e08a8a; --U:#79bdd6; --H:#a9c975; --F:#e0b35a; --T:#cfa77e; --R:#93b2e6; --era1:#1f2624; --era2:#28302d; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(1.6rem,4.5vw,2.4rem);letter-spacing:.04em;line-height:1.15;margin:0 0 8px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:500;font-size:1.15rem;letter-spacing:.06em;margin:0 0 10px;text-wrap:balance}
+h3{font-family:var(--display);font-weight:500;font-size:1rem;letter-spacing:.05em;margin:0 0 8px}
+p{margin:0 0 12px}
+.lede{color:var(--muted);max-width:65ch;margin:0 0 18px}
+.small{font-size:.88rem;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin-bottom:18px}
+.panel ul,.panel ol{margin:6px 0 0;padding-left:20px;display:grid;gap:6px;max-width:68ch}
+[hidden]{display:none!important}
+select,button,input,textarea{font:inherit;font-size:.9rem;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:7px 10px}
+button,select{cursor:pointer}
+button:hover,select:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* sticky bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.prog{flex:1 1 220px;min-width:0}
+.meter{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+.ptxt{font-family:var(--mono);font-size:.78rem;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px}
+/* checklist */
+.age{margin-top:26px}
+.age-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;border-bottom:2px solid var(--fg);padding-bottom:6px}
+.age-head h2{margin:0}
+.age-head span{font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+ol.steps{list-style:none;margin:0;padding:0}
+li.step{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:14px 0;border-bottom:1px solid var(--line)}
+li.step.done{opacity:.5}
+li.step.hl{background:color-mix(in srgb,var(--gold) 12%,transparent)}
+.num{display:flex;flex-direction:column;align-items:center;gap:6px;width:44px}
+.num b{font-family:var(--mono);font-weight:500;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.num input{width:22px;height:22px;accent-color:var(--accent);cursor:pointer;margin:0;padding:0}
+.body{min-width:0}
+.head{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.chip{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--c);border:1px solid var(--c);border-radius:3px;padding:1px 6px;white-space:nowrap}
+.where{font-weight:600}
+.date{font-family:var(--mono);font-size:.76rem;color:var(--gold);margin-top:3px}
+.cues{margin:6px 0 0;display:grid;gap:2px;font-size:.95rem}
+.cues .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:inline-block;width:6.2em}
+.cues q{font-style:italic;quotes:"\201C" "\201D"}
+.meta{font-family:var(--mono);font-size:.76rem;color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 14px;font-variant-numeric:tabular-nums}
+.meta .pg{color:var(--fg)}
+.pos{display:inline-flex;align-items:center;gap:6px}
+.track{width:90px;height:5px;background:var(--line);border-radius:3px;position:relative;overflow:hidden}
+.track i{position:absolute;top:0;bottom:0;background:var(--c)}
+.flag{color:var(--gold)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--muted);margin:14px 0 4px}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;background:var(--c)}
+/* progress */
+.pbook{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+.pbook:last-child{border-bottom:0}
+.pbook .nm{font-weight:600}
+.pbook .pc{font-family:var(--mono);font-size:.85rem;font-variant-numeric:tabular-nums}
+.pbook .meter{grid-column:1/-1;height:8px}
+.pbook .meter i{background:var(--c)}
+.pbook .sub{grid-column:1/-1;font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.big{font-family:var(--display);font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.overall .meter{height:12px;margin-top:10px}
+.tl{margin:10px 0 8px;overflow-x:auto;padding-top:30px;-webkit-overflow-scrolling:touch}
+.tl-in{position:relative;min-width:700px}
+.tl-eras{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--era1)}
+.tl-bands{position:relative;height:22px;border-bottom:1px solid var(--line)}
+.tl-bands div{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.66rem;color:var(--muted);overflow:hidden;white-space:nowrap;box-sizing:border-box}
+.tl-bands div:nth-child(odd){background:var(--era1)}
+.tl-bands div:nth-child(even){background:var(--era2)}
+.tl-bands div+div{border-left:1px solid var(--line)}
+.tl-yrs{display:flex;gap:1px;padding:5px 1px;height:46px;box-sizing:border-box;position:relative}
+.tl-yrs i{flex:var(--w) 1 0;min-width:3px;border-radius:1px;background:var(--c);opacity:.25;cursor:default}
+.tl-yrs i.on{opacity:1}
+.tl-yrs i:hover{cursor:pointer;outline:1px solid var(--fg);outline-offset:1px}
+.tl-tip{position:fixed;z-index:50;max-width:260px;padding:8px 10px;border-radius:6px;background:var(--fg);color:var(--bg);font-size:.78rem;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;display:none}
+.tl-tip b{display:block;font-family:var(--mono);font-size:.72rem;margin-bottom:2px}
+.tl-yrs i.sel{outline:2px solid var(--gold);outline-offset:1px}
+.tl-mark{position:absolute;top:-24px;left:0;width:0;height:24px;font-family:var(--mono);font-size:.7rem;color:var(--gold);white-space:nowrap;transition:left .3s;pointer-events:none}
+.tl-mark span{position:absolute;top:0;left:0}
+.tl-mark::after{content:"";position:absolute;left:-6px;top:17px;width:0;height:0;border:6px solid transparent;border-top-color:var(--gold);border-bottom:0}
+.tl-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 14px;font-size:.8rem;color:var(--muted);margin-top:10px}
+.tl-legend b{color:var(--fg);font-weight:600}
+/* settings */
+.field{display:grid;gap:6px;margin-bottom:16px}
+.field label{font-weight:600}
+.hob input.est{color:var(--muted);font-style:italic}
+.field .desc{font-family:var(--mono);font-size:.76rem;color:var(--accent);min-height:1.2em}
+details.sub{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+details.sub summary{cursor:pointer;font-weight:600}
+.anchors{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:6px 10px;align-items:center;margin-top:10px}
+.anchors input{width:92px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.anchors span{font-size:.9rem;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.status{font-family:var(--mono);font-size:.78rem;color:var(--accent);margin-top:8px}
+.badge{display:inline-block;font-family:var(--mono);font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--muted)}
+.badge.ok{border-color:var(--accent);color:var(--accent)}
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav.tabs .in{max-width:860px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);height:var(--navh)}
+nav.tabs button{border:0;border-radius:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 0}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-selected="true"]{color:var(--accent)}
+nav.tabs button[aria-selected="true"] svg{stroke-width:2.1}
+@media (max-width:480px){.cues .k{display:block;width:auto}}
+@media (prefers-reduced-motion:reduce){.meter i,.tl-mark{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- CHECKLIST -->
+<section id="tab-checklist" class="tab">
+<div class="wrap">
+<h1>Chronological Tolkien</h1>
+<p class="lede">168 steps across seven books, in the order the events happen in the story. Each step names the chapter, the first and last words of the passage, the print pages for your editions, and an estimated story date.</p>
+<div class="bar">
+ <div class="prog"><div class="meter"><i id="meter"></i></div><div class="ptxt" id="ptxt">0 of 168 steps</div></div>
+ <div class="ctrls">
+  <select id="filter" aria-label="Show book"><option value="">All books</option></select>
+  <button id="next" type="button">Go to next step</button>
+ </div>
+</div>
+<div class="legend" id="legend"></div>
+<div id="ages"></div>
+</div>
+</section>
+
+<!-- PROGRESS -->
+<section id="tab-progress" class="tab" hidden>
+<div class="wrap">
+<h1>Progress</h1>
+<div class="panel overall">
+ <div class="row" style="justify-content:space-between;align-items:flex-end">
+  <div><div class="small">Overall</div><div class="big" id="ovPct">0%</div></div>
+  <div class="small" id="ovSub" style="text-align:right"></div>
+ </div>
+ <div class="meter"><i id="ovMeter"></i></div>
+</div>
+<div class="panel">
+ <h2>Story timeline</h2>
+ <p class="small" id="tlNow"></p>
+ <div class="tl" id="tlScroll"><div class="tl-in"><div class="tl-mark" id="tlMark"><span id="tlLab">You are here</span></div><div class="tl-eras" id="tlEras"></div></div></div>
+ <div class="tl-legend" id="tlLegend"></div>
+ <p class="small" style="margin-top:12px">Each tick is one step, colored by book; finished steps are solid. A tick’s width is proportional to the number of story years it covers (steps inside a single year get a minimum sliver so they stay visible). Hover over a tick, or tap it on a touch screen, for details. Dates are estimates.</p>
+</div>
+<div class="panel">
+ <h2>By book</h2>
+ <div id="perBook"></div>
+ <p class="small" style="margin-top:10px">Book bars count only the parts of each book this order uses, weighted by length.</p>
+</div>
+</div>
+</section>
+
+<!-- HOW-TO -->
+<section id="tab-howto" class="tab" hidden>
+<div class="wrap">
+<h1>How to use it</h1>
+<div class="panel">
+ <h2>Set up your editions first</h2>
+ <ol>
+  <li>Open <b>Settings</b> and answer the four edition questions, the same ones the original Chronological Tolkien calculator asks. Each one asks for a page number from a book's table of contents.</li>
+  <li>If your edition matches the one this list was built from, the page ranges are exact. Otherwise they’re scaled estimates, marked with “≈”.</li>
+  <li>To make an estimate close to exact, type in a few chapter start pages under <b>Refine with your table of contents</b>. Two or more per book is enough to bring most ranges within a page or two.</li>
+  <li>For exact pages in any edition, use <b>Import an exact table</b>. Get your custom page from the calculator on chronology.org, save it or copy its text, and load it here.</li>
+ </ol>
+</div>
+<div class="panel">
+ <h2>Reading in print</h2>
+ <ul>
+  <li>Work down the Checklist. Each step tells you the book, the pages, and the first and last words of the passage. Every cut falls between paragraphs.</li>
+  <li>If you want to mark your books the classic way, write the two-letter section code (shown on each step) in the margin where it starts, and “Go to” the next code where it ends.</li>
+  <li><i>The Hobbit</i> is read in whole chapters, so it works with any edition. Its page and time estimates come from the page count or audiobook length you enter in Settings.</li>
+ </ul>
+</div>
+<div class="panel">
+ <h2>Listening to audiobooks</h2>
+ <ul>
+  <li>Find the chapter track the step names, scrub to roughly the “% of book” position, then listen for the starting words. Stop after the closing words.</li>
+  <li>Audio times are estimates based on page counts at a typical narration pace. Set your playback speed in Settings.</li>
+  <li>Many steps come from the <i>Return of the King</i> appendices and the notes in <i>Unfinished Tales</i>. Check that your recordings include them. Appendix steps name the section, since most recordings give each appendix its own track.</li>
+ </ul>
+</div>
+<div class="panel">
+ <h2>What the estimates mean</h2>
+ <ul>
+  <li><b>Chapters:</b> worked out from the page numbers and what each passage covers. A few splits in the middle of a chapter are approximate.</li>
+  <li><b>% of book:</b> where the passage falls in the printed book. It stays about the same in every edition and in audio.</li>
+  <li><b>Story dates:</b> rough dates in the reckoning of the Ages (F.A., S.A., T.A., Fo.A.; S.R. is Shire Reckoning). Some passages are essays or notes that span long periods, so they get a broad range.</li>
+  <li><b>Age headings:</b> the Second Age section starts at the opening of the Akallabêth, and the Third Age section starts right after it ends. The Third Age section also carries the story into the early Fourth Age.</li>
+ </ul>
+</div>
+<div class="panel">
+ <h2>Add it to your iPhone home screen</h2>
+ <ol>
+  <li>Open the page in Safari.</li>
+  <li>Tap the Share button, then <b>Add to Home Screen</b>.</li>
+  <li>Open it from the new icon. It runs full screen like an app.</li>
+ </ol>
+ <p class="small" style="margin-top:10px">Your checkmarks and settings are saved on this device only. The home-screen app and Safari keep separate copies, so use one or the other, or move your progress with the backup code in Settings.</p>
+</div>
+<p class="small">The reading order is based on Larry King’s Chronological Tolkien margin-note table from the Science Fiction Timeline site (chronology.org). Era boundaries follow Tolkien Gateway’s timeline. This is an unofficial fan aid.</p>
+</div>
+</section>
+
+<!-- SETTINGS -->
+<section id="tab-settings" class="tab" hidden>
+<div class="wrap">
+<h1>Settings</h1>
+<div class="panel">
+ <h2>Your editions</h2>
+ <p class="small">Open each book to its table of contents and choose the page number it shows.</p>
+ <div class="field">
+  <label for="edL">The Lord of the Rings: page of “The Grey Havens”</label>
+  <span class="small">One-volume edition: use its contents page. Three volumes: they must all be the same edition, so use <i>The Return of the King</i>.</span>
+  <select id="edL"></select><div class="desc" id="edLd"></div>
+ </div>
+ <div class="field">
+  <label for="edS">The Silmarillion: page of ch. 21, “Of Túrin Turambar”</label>
+  <select id="edS"></select><div class="desc" id="edSd"></div>
+ </div>
+ <div class="field">
+  <label for="edU">Unfinished Tales: page of “The Drúedain” (as listed in the contents, not in the body)</label>
+  <select id="edU"></select><div class="desc" id="edUd"></div>
+ </div>
+ <div class="field">
+  <label for="edC">The Children of Húrin: page of ch. 3, “The Words of Húrin and Morgoth”</label>
+  <select id="edC"><option value="Ca">61</option></select><div class="desc">So far, all editions have the same page numbers.</div>
+ </div>
+ <div class="field">
+  <label for="hobPages">The Hobbit (any edition): page count or audiobook length</label>
+  <span class="small">The Hobbit is read in whole chapters, so any edition works. Fill in either number and the other is estimated. These set the Hobbit’s share of the pages and hours left.</span>
+  <div class="row hob">
+   <span class="small">Pages</span><input id="hobPages" inputmode="numeric" pattern="[0-9]*" aria-label="Hobbit page count" style="width:80px">
+   <span class="small" style="margin-left:8px">Audiobook</span><input id="hobH" inputmode="numeric" pattern="[0-9]*" aria-label="Hobbit audiobook hours" style="width:56px"><span class="small">h</span><input id="hobM" inputmode="numeric" pattern="[0-9]*" aria-label="Hobbit audiobook minutes" style="width:56px"><span class="small">min</span>
+  </div>
+  <div class="desc" id="hobD"></div>
+ </div>
+ <div class="row"><span class="small">Page accuracy now:</span><span id="accSum"></span></div>
+
+ <details class="sub" id="refine">
+  <summary>Refine with your table of contents</summary>
+  <p class="small" style="margin-top:8px">Type the page where each chapter starts, from your contents page. Leave any blank. The grey number is the current estimate.</p>
+  <div id="anchorBox"></div>
+  <div class="row" style="margin-top:10px"><button type="button" id="clearAnchors">Clear refinements</button></div>
+ </details>
+
+ <details class="sub">
+  <summary>Import an exact table</summary>
+  <p class="small" style="margin-top:8px">On chronology.org, run the Chronological Tolkien calculator for your editions. Then do one of these:</p>
+  <ul class="small">
+   <li>Save the result page as a file and choose it here.</li>
+   <li>Or select all the text on that page, copy it, and paste it below.</li>
+  </ul>
+  <div class="row" style="margin:8px 0"><input type="file" id="impFile" accept=".html,.htm,.txt,text/html,text/plain" aria-label="Choose a saved table file"></div>
+  <textarea id="impText" placeholder="Paste the table text here"></textarea>
+  <div class="row" style="margin-top:8px"><button type="button" class="primary" id="impBtn">Import pasted text</button><button type="button" id="impClear">Remove imported table</button></div>
+  <div class="status" id="impStatus"></div>
+ </details>
+</div>
+
+<div class="panel">
+ <h2>Display</h2>
+ <div class="field">
+  <label for="speed">Audiobook playback speed</label>
+  <select id="speed"><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select>
+ </div>
+ <div class="field">
+  <label for="theme">Theme</label>
+  <select id="theme"><option value="">Match system</option><option value="light">Light</option><option value="dark">Dark</option></select>
+ </div>
+</div>
+
+<div class="panel">
+ <h2>Backup and reset</h2>
+ <p class="small">Copy this code to move your checkmarks and settings to another device or browser. Paste a code and tap Restore to load it.</p>
+ <textarea id="backup" aria-label="Backup code"></textarea>
+ <div class="row" style="margin-top:8px"><button type="button" id="bkCopy">Copy code</button><button type="button" id="bkRestore">Restore from code</button><button type="button" id="reset">Clear all checkmarks</button></div>
+ <div class="status" id="bkStatus"></div>
+</div>
+</div>
+</section>
+
+<nav class="tabs" aria-label="Sections">
+ <div class="in" role="tablist">
+  <button type="button" role="tab" data-tab="checklist" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg>Checklist</button>
+  <button type="button" role="tab" data-tab="progress" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progress</button>
+  <button type="button" role="tab" data-tab="howto" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5c-.8 0-1.5-.7-1.5-1.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z"/></svg>How-to</button>
+  <button type="button" role="tab" data-tab="settings" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
+ </div>
+</nav>
+
+<script>
+"use strict";
+const DATA=[{"n":1,"code":"AA","book":"S","start":"There was Eru…","end":"…their bodies lay.","where":"Ainulindalë, Valaquenta, and Quenta Silmarillion ch. 1–19, all of it","pct":[0,60],"mins":484,"rs":15,"re":188,"date":"Before Time – F.A. 466","era":"VY","yr":1,"age":1},{"n":2,"code":"EA","book":"C","start":"Hador Goldenhead was…","end":"…never saw him again.","where":"Ch. 1, The Childhood of Túrin, opening (≈2 pages)","pct":[0,1],"mins":2,"rs":33,"re":34,"date":"F.A. 416–465","era":"FA","yr":416,"age":1},{"n":3,"code":"EB","book":"C","start":"So the days passed…","end":"…his house no more.","where":"Ch. 1, The Childhood of Túrin, to the end (skip all of ch. 2)","pct":[2,8],"mins":28,"rs":37,"re":51,"date":"F.A. 465–472","era":"FA","yr":465,"age":1},{"n":4,"code":"AB","book":"S","start":"In those days…","end":"…come to him.","where":"Ch. 20, Of the Fifth Battle: Nirnaeth Arnoediad, from the start (most of the chapter)","pct":[60,63],"mins":22,"rs":188,"re":196,"date":"F.A. 468–472","era":"FA","yr":468,"age":1},{"n":5,"code":"EC","book":"C","start":"Therefore Hurin was…","end":"…be hidden from you.","where":"Ch. 3, The Words of Húrin and Morgoth, all","pct":[13,15],"mins":6,"rs":62,"re":65,"date":"F.A. 472","era":"FA","yr":472,"age":1},{"n":6,"code":"AC","book":"S","start":"And even so…","end":"…crumbled into rust.","where":"Ch. 20, last paragraph(s)","pct":[63,63],"mins":1,"rs":197,"re":197,"date":"F.A. 472","era":"FA","yr":472,"age":1},{"n":7,"code":"ED","book":"C","start":"To Brethil three men…","end":"…now here in love.","where":"Ch. 4, The Departure of Túrin, all","pct":[15,20],"mins":22,"rs":66,"re":77,"date":"F.A. 473","era":"FA","yr":473,"age":1},{"n":8,"code":"DC","book":"U","start":"Thus began the sojourn…","end":"…sorrow of his heart.","where":"Part 1-II, Narn i Hîn Húrin, “Túrin in Doriath”, opening (≈2 pages; replaces the same passage in CoH)","pct":[14,15],"mins":6,"rs":63,"re":65,"date":"F.A. 473","era":"FA","yr":473,"age":1},{"n":9,"code":"EE","book":"C","start":"In the years of his…","end":"…treated with honour.","where":"Ch. 5, Túrin in Doriath (from ≈3 pages in), through the end of ch. 10, Túrin in Nargothrond","pct":[21,61],"mins":180,"rs":80,"re":170,"date":"F.A. 473–495","era":"FA","yr":473,"age":1},{"n":10,"code":"DA","book":"U","start":"Rian wife of…","end":"…that it brings.","where":"Part 1-I, Of Tuor and His Coming to Gondolin, beginning","pct":[0,2],"mins":24,"rs":3,"re":11,"date":"F.A. 472–495","era":"FA","yr":476,"age":1},{"n":11,"code":"EF","book":"C","start":"When five years had…","end":"…Well met!","where":"Ch. 11, The Fall of Nargothrond, first part","pct":[61,64],"mins":14,"rs":171,"re":178,"date":"F.A. 495","era":"FA","yr":495,"age":1},{"n":12,"code":"DD","book":"U","start":"For fear of…","end":"…in the eye.","where":"Part 1-II, Narn i Hîn Húrin, Appendix (one paragraph)","pct":[35,35],"mins":2,"rs":147,"re":147,"date":"F.A. 495","era":"FA","yr":495,"age":1},{"n":13,"code":"EG","book":"C","start":"Then Turin sprang…","end":"…turning never aside.","where":"Ch. 11, The Fall of Nargothrond, rest of the chapter","pct":[64,66],"mins":6,"rs":178,"re":181,"date":"F.A. 495","era":"FA","yr":495,"age":1},{"n":14,"code":"DX","book":"U","start":"Tuor tarried many…","end":"…Tuor, draw together.","where":"Part 1-I, Of Tuor and His Coming to Gondolin, middle","pct":[2,5],"mins":39,"rs":11,"re":24,"date":"F.A. 495–496","era":"FA","yr":495,"age":1},{"n":15,"code":"EX","book":"C","start":"At last worn…","end":"…lays of Beleriand.","where":"Ch. 12, The Return of Túrin to Dor-lómin, through ch. 18, The Death of Túrin (stop ≈2 pages before the end)","pct":[66,99],"mins":150,"rs":182,"re":257,"date":"F.A. 496–501","era":"FA","yr":496,"age":1},{"n":16,"code":"AM","book":"S","start":"So ended the…","end":"…of Cabed Naeramarth.","where":"Ch. 22, Of the Ruin of Doriath, opening (≈ first 2 pages)","pct":[73,74],"mins":6,"rs":227,"re":229,"date":"F.A. 501–502","era":"FA","yr":501,"age":1},{"n":17,"code":"EH","book":"C","start":"But Hurin did not look…","end":"…that she had died.","where":"Ch. 18, The Death of Túrin, final pages","pct":[99,100],"mins":2,"rs":258,"re":259,"date":"F.A. 502","era":"FA","yr":502,"age":1},{"n":18,"code":"AN","book":"S","start":"But Hurin did not answer…","end":"…by the sea.","where":"Ch. 22, Of the Ruin of Doriath, rest of the chapter","pct":[74,77],"mins":22,"rs":229,"re":237,"date":"F.A. 502–506","era":"FA","yr":502,"age":1},{"n":19,"code":"DB","book":"U","start":"When the Blacksword…","end":"…from Ulmo himself.","where":"Part 1-I, Of Tuor and His Coming to Gondolin, to the end of the tale (skip its Notes)","pct":[5,9],"mins":42,"rs":24,"re":38,"date":"F.A. 496","era":"FA","yr":496,"age":1},{"n":20,"code":"AO","book":"S","start":"Thus it was…","end":"…dooms of Mandos.","where":"Ch. 23, Of Tuor and the Fall of Gondolin (from ≈¼ in), then all of ch. 24, Of the Voyage of Eärendil","pct":[78,83],"mins":42,"rs":240,"re":255,"date":"F.A. 496–590","era":"FA","yr":500,"age":1},{"n":21,"code":"CA","book":"S","start":"Of old there…","end":"…Quenta Silmarillion.","where":"Of the Rings of Power and the Third Age, beginning","pct":[93,94],"mins":3,"rs":285,"re":286,"date":"End of F.A. – early S.A.","era":"FA","yr":590,"age":1},{"n":22,"code":"BA","book":"S","start":"It is said…","end":"…with its fragrance.","where":"Akallabêth, beginning","pct":[84,86],"mins":11,"rs":259,"re":263,"date":"S.A. 1–32","era":"SA","yr":1,"age":2},{"n":23,"code":"HA","book":"U","start":"The realm of…","end":"…back to Middle-Earth.","where":"Part 2-III, The Line of Elros, opening (Elros)","pct":[50,51],"mins":3,"rs":213,"re":214,"date":"S.A. 32–740","era":"SA","yr":32,"age":2},{"n":24,"code":"FA","book":"U","start":"The land of…","end":"…that follows here.","where":"Part 2-I, A Description of the Island of Númenor, all (skip its Notes)","pct":[37,39],"mins":18,"rs":157,"re":163,"date":"S.A. c. 600 (a description)","era":"SA","yr":600,"age":2},{"n":25,"code":"GB","book":"U","start":"3: As is told…","end":"…the First Age.","where":"Part 2-II, Aldarion and Erendis, Notes: note 3 only","pct":[49,49],"mins":3,"rs":206,"re":207,"date":"S.A. c. 700","era":"SA","yr":700,"age":2},{"n":26,"code":"GA","book":"U","start":"Meneldur was the…","end":"…came to pass.","where":"Part 2-II, Aldarion and Erendis, the whole main text","pct":[39,49],"mins":120,"rs":165,"re":205,"date":"S.A. 700–1075","era":"SA","yr":700,"age":2},{"n":27,"code":"BB","book":"S","start":"Thus it was…","end":"…their hearts returned.","where":"Akallabêth (one paragraph)","pct":[86,86],"mins":1,"rs":263,"re":263,"date":"S.A. c. 600–1200","era":"SA","yr":900,"age":2},{"n":28,"code":"IA","book":"U","start":"Galadriel was the…","end":"…defence against Sauron.","where":"Part 2-IV, The History of Galadriel and Celeborn, “Concerning Galadriel and Celeborn”","pct":[55,56],"mins":9,"rs":231,"re":234,"date":"Years of the Trees – S.A. c. 1200","era":"SA","yr":1150,"age":2},{"n":29,"code":"CB","book":"S","start":"Elsewhere in…","end":"…to the One.","where":"Of the Rings of Power","pct":[93,94],"mins":6,"rs":286,"re":288,"date":"S.A. 1200–1600","era":"SA","yr":1200,"age":2},{"n":30,"code":"IB","book":"U","start":"Sauron himself departed…","end":"…a long time.","where":"Part 2-IV, Galadriel and Celeborn, “Concerning Galadriel and Celeborn” (cont.)","pct":[55,56],"mins":9,"rs":234,"re":237,"date":"S.A. 1500–1697","era":"SA","yr":1500,"age":2},{"n":31,"code":"CC","book":"S","start":"From that time…","end":"…voices of death.","where":"Of the Rings of Power","pct":[94,95],"mins":3,"rs":288,"re":289,"date":"S.A. 1693–1701","era":"SA","yr":1693,"age":2},{"n":32,"code":"YA","book":"R","start":"Concerning the beginning…","end":"…began to dwindle.","where":"Appendix A.III, Durin’s Folk","pct":null,"appendix":true,"mins":1,"rs":434,"re":434,"date":"Before the Sun – S.A. c. 1700","era":"SA","yr":1700,"age":2},{"n":33,"code":"HB","book":"U","start":"VIII: Tar-Anarion…","end":"…Numenor be seen.","where":"Part 2-III, The Line of Elros, kings VIII–XII","pct":[51,51],"mins":3,"rs":215,"re":216,"date":"S.A. 1280–2029","era":"SA","yr":1280,"age":2},{"n":34,"code":"IF","book":"U","start":"Late and fragmentary…","end":"…into the mountains.","where":"Part 2-IV, Galadriel and Celeborn","pct":[58,58],"mins":3,"rs":244,"re":245,"date":"S.A. c. 1700–2000","era":"SA","yr":1750,"age":2},{"n":35,"code":"IJ","book":"U","start":"The river Gwathlo…","end":"…This was Agathurush.","where":"Part 2-IV, Galadriel and Celeborn, Appendix D, The Port of Lond Daer","pct":[61,62],"mins":9,"rs":259,"re":262,"date":"S.A. c. 750–1800","era":"SA","yr":1800,"age":2},{"n":36,"code":"OA","book":"U","start":"The Folk of…","end":"…name for themselves.","where":"Part 4-I, The Drúedain, main text","pct":[91,93],"mins":21,"rs":381,"re":388,"date":"First and Second Ages","era":"SA","yr":1900,"age":2},{"n":37,"code":"BC","book":"S","start":"Now this yearning…","end":"…body and mind.","where":"Akallabêth","pct":[86,87],"mins":8,"rs":263,"re":266,"date":"S.A. c. 2000–2221","era":"SA","yr":2000,"age":2},{"n":38,"code":"HC","book":"U","start":"XIII: Tar-Atanamir…","end":"…bring ill-fortune.","where":"Part 2-III, The Line of Elros, kings XIII–XIV","pct":[51,52],"mins":3,"rs":216,"re":217,"date":"S.A. 2029–2386","era":"SA","yr":2029,"age":2},{"n":39,"code":"BD","book":"S","start":"Then Tar-Ancalimon…","end":"…legends of Men.","where":"Akallabêth","pct":[87,87],"mins":3,"rs":266,"re":267,"date":"S.A. 2221–2386","era":"SA","yr":2221,"age":2},{"n":40,"code":"HD","book":"U","start":"XV: Tar-Telemmaite…","end":"…called Ar-Belzagar.","where":"Part 2-III, The Line of Elros, kings XV–XVIII","pct":[51,51],"mins":2,"rs":217,"re":217,"date":"S.A. 2386–2899","era":"SA","yr":2386,"age":2},{"n":41,"code":"CD","book":"S","start":"Now Sauron's…","end":"…abode with fire.","where":"Of the Rings of Power","pct":[94,95],"mins":3,"rs":289,"re":290,"date":"S.A. c. 2250","era":"SA","yr":2400,"age":2},{"n":42,"code":"BE","book":"S","start":"In this Age…","end":"…to Ar-Zimraphel.","where":"Akallabêth","pct":[87,88],"mins":8,"rs":267,"re":270,"date":"S.A. 2899–3255","era":"SA","yr":2899,"age":2},{"n":43,"code":"HE","book":"U","start":"XIX: Tar-Ardamin…","end":"…named Ar-Zimraphel.","where":"Part 2-III, The Line of Elros, kings XIX–XXIV (stop at XXV Ar-Pharazôn)","pct":[51,52],"mins":6,"rs":217,"re":219,"date":"S.A. 2899–3255","era":"SA","yr":2899,"age":2},{"n":44,"code":"BF","book":"S","start":"The mightiest and…","end":"…before they died.","where":"Akallabêth, to the end","pct":[88,92],"mins":34,"rs":270,"re":282,"date":"S.A. 3255–3319","era":"SA","yr":3255,"age":2},{"n":45,"code":"CE","book":"S","start":"Yet there came…","end":"…the Black Land.","where":"Of the Rings of Power","pct":[95,97],"mins":14,"rs":290,"re":295,"date":"S.A. 3320–3441","era":"SA","yr":3320,"age":3},{"n":46,"code":"JA","book":"U","start":"After the fall…","end":"…long years after.","where":"Part 3-I, The Disaster of the Gladden Fields, main text","pct":[64,65],"mins":15,"rs":269,"re":274,"date":"T.A. 2","era":"TA","yr":2,"age":3},{"n":47,"code":"CF","book":"S","start":"But Isildur was…","end":"…world was young.","where":"Of the Rings of Power","pct":[97,97],"mins":3,"rs":295,"re":296,"date":"T.A. 2","era":"TA","yr":2,"age":3},{"n":48,"code":"UA","book":"R","start":"Eriador was of old…","end":"…keeping of Arthedain.","where":"Appendix A.I(iii), Eriador, Arnor, and the Heirs of Isildur","pct":null,"appendix":true,"mins":2,"rs":388,"re":389,"date":"T.A. 2–861","era":"TA","yr":3,"age":3},{"n":49,"code":"VA","book":"R","start":"There were thirty-one…","end":"…'Lord of the Coasts'.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":2,"rs":395,"re":396,"date":"T.A. 2–913","era":"TA","yr":5,"age":3},{"n":50,"code":"OX","book":"U","start":"7. In a letter written in 1956…","end":"…figure-head on the prow.","where":"Part 4-II, The Istari, Notes: note 7","pct":[97,97],"mins":2,"rs":407,"re":407,"date":"T.A. c. 913","era":"TA","yr":900,"age":3},{"n":51,"code":"VX","book":"R","start":"Earnil I, his nephew…","end":"…never fully repaired.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":2,"rs":396,"re":397,"date":"T.A. 913–1149","era":"TA","yr":913,"age":3},{"n":52,"code":"CH","book":"S","start":"In all the days…","end":"…was their peril.","where":"Of the Rings of Power","pct":[97,98],"mins":6,"rs":297,"re":299,"date":"T.A. c. 1000–1050","era":"TA","yr":1000,"age":3},{"n":53,"code":"II","book":"U","start":"Something more of…","end":"…had disturbed it.","where":"Part 2-IV, Galadriel and Celeborn, Appendices","pct":[61,61],"mins":6,"rs":256,"re":258,"date":"T.A. c. 1000","era":"TA","yr":1000,"age":3},{"n":54,"code":"OD","book":"U","start":"Most of the…","end":"…Mandos and Nienna.","where":"Part 4-II, The Istari (one paragraph)","pct":[95,95],"mins":2,"rs":398,"re":398,"date":"T.A. c. 1000","era":"TA","yr":1000,"age":3},{"n":55,"code":"ZA","book":"R","start":"These were the fading…","end":"…I will await you.","where":"Appendix B, The Tale of Years, The Third Age","pct":null,"appendix":true,"mins":2,"rs":451,"re":452,"date":"T.A. 1–1100","era":"TA","yr":1000,"age":3},{"n":56,"code":"OB","book":"U","start":"Wizard is a…","end":"…of that time.","where":"Part 4-II, The Istari, beginning","pct":[94,94],"mins":6,"rs":393,"re":395,"date":"T.A. c. 1000","era":"TA","yr":1000,"age":3},{"n":57,"code":"IH","book":"U","start":"There was in…","end":"…Sauron rose again.","where":"Part 2-IV, Galadriel and Celeborn","pct":[58,59],"mins":9,"rs":246,"re":249,"date":"T.A. c. 1000–1100","era":"TA","yr":1050,"age":3},{"n":58,"code":"UB","book":"R","start":"It was in the…","end":"…people of fishers.","where":"Appendix A.I(iii), Eriador, Arnor, and the Heirs of Isildur","pct":null,"appendix":true,"mins":2,"rs":389,"re":390,"date":"T.A. 861–1356","era":"TA","yr":1100,"age":3},{"n":59,"code":"VB","book":"R","start":"Minalcar son of…","end":"…spent in exile.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":7,"rs":397,"re":400,"date":"T.A. 1240–1447","era":"TA","yr":1240,"age":3},{"n":60,"code":"UC","book":"R","start":"In the days of Argeleb II…","end":"…war of 1409.","where":"Appendix A.I(iii), Eriador, Arnor, and the Heirs of Isildur","pct":null,"appendix":true,"mins":2,"rs":390,"re":391,"date":"T.A. 1409–1670","era":"TA","yr":1409,"age":3},{"n":61,"code":"VC","book":"R","start":"The second and…","end":"…of the Harad.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":2,"rs":400,"re":401,"date":"T.A. 1636","era":"TA","yr":1636,"age":3},{"n":62,"code":"KA","book":"U","start":"The Chronicle of…","end":"…by the Wainriders.","where":"Part 3-II, Cirion and Eorl, (i) The Northmen and the Wainriders, beginning","pct":[68,69],"mins":3,"rs":287,"re":288,"date":"T.A. 1851–1856","era":"TA","yr":1851,"age":3},{"n":63,"code":"VD","book":"R","start":"The third evil…","end":"…re-entered Mordor.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":1,"rs":401,"re":401,"date":"T.A. 1856","era":"TA","yr":1856,"age":3},{"n":64,"code":"KB","book":"U","start":"But at length…","end":"…than it needed.","where":"Part 3-II, Cirion and Eorl, (i) The Northmen and the Wainriders","pct":[68,69],"mins":6,"rs":288,"re":290,"date":"T.A. 1856–1899","era":"TA","yr":1856,"age":3},{"n":65,"code":"VE","book":"R","start":"Calimehtar son of…","end":"…in great force.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":2,"rs":401,"re":402,"date":"T.A. 1899","era":"TA","yr":1899,"age":3},{"n":66,"code":"KC","book":"U","start":"Ondoher was aware…","end":"…and routed them.","where":"Part 3-II, Cirion and Eorl, (i) The Northmen and the Wainriders, end","pct":[69,70],"mins":12,"rs":290,"re":294,"date":"T.A. 1940–1944","era":"TA","yr":1940,"age":3},{"n":67,"code":"VF","book":"R","start":"Many of the…","end":"…are united again.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":2,"rs":402,"re":403,"date":"T.A. 1944–1945","era":"TA","yr":1944,"age":3},{"n":68,"code":"UD","book":"R","start":"In 1974 the…","end":"…our reckoning (1979).","where":"Appendix A.I(iii), Eriador, Arnor, and the Heirs of Isildur","pct":null,"appendix":true,"mins":5,"rs":391,"re":393,"date":"T.A. 1974–1975","era":"TA","yr":1974,"age":3},{"n":69,"code":"VG","book":"R","start":"In Gondor also…","end":"…that was revealed.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":2,"rs":404,"re":405,"date":"T.A. 1975–2050","era":"TA","yr":1975,"age":3},{"n":70,"code":"YB","book":"R","start":"It came to pass…","end":"…great cold-drake.","where":"Appendix A.III, Durin’s Folk","pct":null,"appendix":true,"mins":2,"rs":434,"re":435,"date":"T.A. 1980–2589","era":"TA","yr":1980,"age":3},{"n":71,"code":"ID","book":"U","start":"The people of…","end":"…son became king.","where":"Part 2-IV, Galadriel and Celeborn (one paragraph)","pct":[57,57],"mins":2,"rs":241,"re":241,"date":"T.A. c. 1981","era":"TA","yr":1981,"age":3},{"n":72,"code":"IC","book":"U","start":"Amroth was King…","end":"…memory of it.","where":"Part 2-IV, Galadriel and Celeborn, “Amroth and Nimrodel”","pct":[56,57],"mins":6,"rs":238,"re":240,"date":"T.A. 1981","era":"TA","yr":1981,"age":3},{"n":73,"code":"IG","book":"U","start":"In a note…","end":"…face and mind.","where":"Part 2-IV, Galadriel and Celeborn","pct":[58,59],"mins":3,"rs":245,"re":246,"date":"T.A. 1981","era":"TA","yr":1981,"age":3},{"n":74,"code":"IE","book":"U","start":"But during the…","end":"…of the Ring.","where":"Part 2-IV, Galadriel and Celeborn","pct":[57,58],"mins":3,"rs":242,"re":243,"date":"T.A. c. 1981–2060","era":"TA","yr":1981,"age":3},{"n":75,"code":"CG","book":"S","start":"Yet at the last…","end":"…war and destruction.","where":"Of the Rings of Power","pct":[97,98],"mins":3,"rs":296,"re":297,"date":"T.A. 1980–2002","era":"TA","yr":1990,"age":3},{"n":76,"code":"VH","book":"R","start":"It was thus…","end":"…beneath seven stars.","where":"Appendix A.I(iv), Gondor and the Heirs of Anárion","pct":null,"appendix":true,"mins":2,"rs":406,"re":407,"date":"T.A. 2002–2050","era":"TA","yr":2002,"age":3},{"n":77,"code":"CI","book":"S","start":"Even as the first…","end":"…and their history.","where":"Of the Rings of Power","pct":[98,99],"mins":3,"rs":299,"re":300,"date":"T.A. 2060–2063","era":"TA","yr":2060,"age":3},{"n":78,"code":"VI","book":"R","start":"After Mardil Voronwe…","end":"…after his father.","where":"Appendix A.I(iv), Gondor, The Stewards","pct":null,"appendix":true,"mins":2,"rs":407,"re":408,"date":"T.A. 2050–2475","era":"TA","yr":2063,"age":3},{"n":79,"code":"XA","book":"R","start":"Eorl the Young…","end":"…of their home.","where":"Appendix A.II, The House of Eorl","pct":null,"appendix":true,"mins":1,"rs":423,"re":423,"date":"T.A. 1977–2510","era":"TA","yr":2100,"age":3},{"n":80,"code":"XB","book":"R","start":"Many lords and…","end":"…West over Sea.","where":"Appendix A.II, The House of Eorl","pct":null,"appendix":true,"mins":2,"rs":424,"re":425,"date":"T.A. c. 2510","era":"TA","yr":2500,"age":3},{"n":81,"code":"KD","book":"U","start":"While the Eotheod…","end":"…the Holy Mount.","where":"Part 3-II, Cirion and Eorl, (ii) The Ride of Eorl, (iii) Cirion and Eorl, (iv) The Tradition of Isildur","pct":[70,74],"mins":48,"rs":294,"re":310,"date":"T.A. 2510","era":"TA","yr":2510,"age":3},{"n":82,"code":"NF","book":"U","start":"In ancient days…","end":"…renewed their attacks.","where":"Part 3-V, Fords of Isen, Appendix","pct":[89,90],"mins":6,"rs":374,"re":376,"date":"T.A. 2510–2710","era":"TA","yr":2510,"age":3},{"n":83,"code":"QA","book":"F","start":"Hobbits are an…","end":"…put his mind to.","where":"Prologue §1, Concerning Hobbits, and §2, Concerning Pipe-weed","pct":[0,2],"mins":25,"rs":1,"re":12,"date":"T.A. 1050–2670 (hobbit history)","era":"TA","yr":2600,"age":3},{"n":84,"code":"JD","book":"U","start":"In another place…","end":"…of being seen.","where":"Part 3-I, Gladden Fields, Notes/Appendix","pct":[68,68],"mins":3,"rs":285,"re":286,"date":"T.A. c. 2700","era":"TA","yr":2700,"age":3},{"n":85,"code":"UE","book":"R","start":"After Arvedui the…","end":"…by Bandobras Took.","where":"Appendix A.I(iii), Eriador, Arnor, and the Heirs of Isildur","pct":null,"appendix":true,"mins":2,"rs":393,"re":394,"date":"T.A. 1975–2747","era":"TA","yr":2747,"age":3},{"n":86,"code":"NG","book":"U","start":"No alliance of…","end":"…invasions of 2758.","where":"Part 3-V, Fords of Isen, Appendix","pct":[89,90],"mins":6,"rs":376,"re":378,"date":"T.A. 2700–2758","era":"TA","yr":2750,"age":3},{"n":87,"code":"XD","book":"R","start":"1. Eorl the Young…","end":"…son, became king.","where":"Appendix A.II, The House of Eorl","pct":null,"appendix":true,"mins":2,"rs":429,"re":430,"date":"T.A. 2510–2759","era":"TA","yr":2754,"age":3},{"n":88,"code":"XC","book":"R","start":"Of the Kings…","end":"…creatures more evil.","where":"Appendix A.II, The House of Eorl","pct":null,"appendix":true,"mins":9,"rs":425,"re":429,"date":"T.A. 2758–2759","era":"TA","yr":2758,"age":3},{"n":89,"code":"NH","book":"U","start":"It can thus…","end":"…less against it.","where":"Part 3-V, Fords of Isen, Appendix (one paragraph)","pct":[90,90],"mins":2,"rs":378,"re":378,"date":"T.A. 2759","era":"TA","yr":2759,"age":3},{"n":90,"code":"VJ","book":"R","start":"In the days of Beren…","end":"…dwelt in Isengard.","where":"Appendix A.I(iv), Gondor, The Stewards","pct":null,"appendix":true,"mins":1,"rs":409,"re":409,"date":"T.A. 2759","era":"TA","yr":2759,"age":3},{"n":91,"code":"XE","book":"R","start":"10. Frealaf Hildeson…","end":"…that it gave him.","where":"Appendix A.II, The House of Eorl","pct":null,"appendix":true,"mins":1,"rs":430,"re":430,"date":"T.A. 2759–2798","era":"TA","yr":2759,"age":3},{"n":92,"code":"YC","book":"R","start":"Not long after…","end":"…little or none.","where":"Appendix A.III, Durin’s Folk","pct":null,"appendix":true,"mins":14,"rs":435,"re":441,"date":"T.A. 2770–2799","era":"TA","yr":2770,"age":3},{"n":93,"code":"YF","book":"R","start":"Dis was the…","end":"…in their crafts.","where":"Appendix A.III, Durin’s Folk","pct":null,"appendix":true,"mins":5,"rs":445,"re":447,"date":"T.A. c. 2799","era":"TA","yr":2799,"age":3},{"n":94,"code":"VK","book":"R","start":"It was in the days…","end":"…could be found.","where":"Appendix A.I(iv), Gondor, The Stewards","pct":null,"appendix":true,"mins":1,"rs":409,"re":409,"date":"T.A. c. 2800","era":"TA","yr":2800,"age":3},{"n":95,"code":"YD","book":"R","start":"Of this Ring…","end":"…at last he died.","where":"Appendix A.III, Durin’s Folk","pct":null,"appendix":true,"mins":2,"rs":441,"re":442,"date":"T.A. 2841–2850","era":"TA","yr":2841,"age":3},{"n":96,"code":"CJ","book":"S","start":"Now the Shadow…","end":"…upon the Enemy.","where":"Of the Rings of Power","pct":[98,99],"mins":6,"rs":300,"re":302,"date":"T.A. 2850–2851","era":"TA","yr":2850,"age":3},{"n":97,"code":"MJ","book":"U","start":"Now because of his…","end":"…own sake merely.","where":"Part 3-IV, The Hunt for the Ring, (iii)","pct":[84,84],"mins":3,"rs":353,"re":354,"date":"T.A. c. 2851–2900","era":"TA","yr":2851,"age":3},{"n":98,"code":"MI","book":"U","start":"Saruman soon became…","end":"…of his grasp.","where":"Part 3-IV, The Hunt for the Ring, (iii) Concerning Gandalf, Saruman and the Shire","pct":[83,84],"mins":6,"rs":351,"re":353,"date":"T.A. 2851–2953","era":"TA","yr":2851,"age":3},{"n":99,"code":"LB","book":"U","start":"So Thorin Oakenshield…","end":"…tale of his wrongs.","where":"Part 3-III, The Quest of Erebor, Appendix","pct":[78,78],"mins":3,"rs":328,"re":329,"date":"T.A. 2802–2941","era":"TA","yr":2900,"age":3},{"n":100,"code":"YE","book":"R","start":"But at last…","end":"…grandson of Thror.","where":"Appendix A.III, Durin’s Folk","pct":null,"appendix":true,"mins":2,"rs":443,"re":444,"date":"T.A. 2941","era":"TA","yr":2941,"age":3},{"n":101,"code":"LE","book":"U","start":"When Gandalf accepted…","end":"…his ears too soon.","where":"Part 3-III, The Quest of Erebor, Appendix","pct":[79,80],"mins":12,"rs":332,"re":336,"date":"T.A. 2941 (March)","era":"TA","yr":2941,"age":3},{"n":102,"code":"PA","book":"H","start":"In a hole…","end":"…he woke up.","where":"Ch. 1, An Unexpected Party","pct":null,"mins":50,"date":"T.A. 2941 (April)","era":"TA","yr":2941,"age":3},{"n":103,"code":"LF","book":"U","start":"It was on the morning…","end":"…have been ruined.","where":"Part 3-III, The Quest of Erebor, Appendix (one paragraph)","pct":[80,80],"mins":2,"rs":336,"re":336,"date":"T.A. 2941 (April)","era":"TA","yr":2941,"age":3},{"n":104,"code":"PB","book":"H","start":"Up jumped Bilbo…","end":"…to be seen.","where":"Ch. 2–9 (Roast Mutton through Barrels out of Bond)","pct":null,"mins":290,"date":"T.A. 2941 (Apr–Sep)","era":"TA","yr":2941,"age":3},{"n":105,"code":"CK","book":"S","start":"But ever the…","end":"…none save himself.","where":"Of the Rings of Power (one paragraph)","pct":[99,99],"mins":1,"rs":302,"re":302,"date":"T.A. 2941","era":"TA","yr":2941,"age":3},{"n":106,"code":"PC","book":"H","start":"The day grew…","end":"…the tobacco-jar.","where":"Ch. 10–19 (A Warm Welcome through The Last Stage)","pct":null,"mins":310,"date":"T.A. 2941–2942","era":"TA","yr":2941,"age":3},{"n":107,"code":"QC","book":"F","start":"Now it is a…","end":"…this History begins.","where":"Prologue §4, Of the Finding of the Ring, last part","pct":[3,3],"mins":2,"rs":17,"re":18,"date":"T.A. 2942","era":"TA","yr":2942,"age":3},{"n":108,"code":"VL","book":"R","start":"In the days of Turin…","end":"…and fortified it.","where":"Appendix A.I(iv), Gondor, The Stewards","pct":null,"appendix":true,"mins":2,"rs":409,"re":410,"date":"T.A. c. 2901","era":"TA","yr":2942,"age":3},{"n":109,"code":"XF","book":"R","start":"14. Folcwine…","end":"…supporting its enemies.","where":"Appendix A.II, The House of Eorl","pct":null,"appendix":true,"mins":2,"rs":430,"re":431,"date":"T.A. 2885–2980","era":"TA","yr":2942,"age":3},{"n":110,"code":"OF","book":"U","start":"The palantiri were…","end":"…domination and deceit.","where":"Part 4-III, The Palantíri, beginning","pct":[97,98],"mins":6,"rs":409,"re":411,"date":"T.A. c. 2950–3000","era":"TA","yr":2950,"age":3},{"n":111,"code":"WA","book":"R","start":"Arador was the…","end":"…from the rock.","where":"Appendix A.I(v), The Tale of Aragorn and Arwen","pct":null,"appendix":true,"mins":12,"rs":413,"re":418,"date":"T.A. 2930–2980","era":"TA","yr":2951,"age":3},{"n":112,"code":"VM","book":"R","start":"Ecthelion II…","end":"…to supplant him.","where":"Appendix A.I(iv), Gondor, The Stewards","pct":null,"appendix":true,"mins":5,"rs":410,"re":412,"date":"T.A. 2953–2980","era":"TA","yr":2957,"age":3},{"n":113,"code":"WB","book":"R","start":"It came to pass…","end":"…the next spring.","where":"Appendix A.I(v), The Tale of Aragorn and Arwen","pct":null,"appendix":true,"mins":5,"rs":418,"re":420,"date":"T.A. 2980","era":"TA","yr":2980,"age":3},{"n":114,"code":"QB","book":"F","start":"The Shire was…","end":"…that he had found.","where":"Prologue §3, Of the Ordering of the Shire","pct":[2,3],"mins":5,"rs":12,"re":14,"date":"T.A. c. 3000","era":"TA","yr":2985,"age":3},{"n":115,"code":"RA","book":"F","start":"When Mr. Bilbo…","end":"…in the Shire.","where":"Book I ch. 1, A Long-expected Party, plus the opening of ch. 2, The Shadow of the Past","pct":[5,11],"mins":69,"rs":27,"re":57,"date":"T.A. 3001–3002","era":"TA","yr":3001,"age":3},{"n":116,"code":"XG","book":"R","start":"In 2989 Theodwyn…","end":"…had called Steelsheen.","where":"Appendix A.II, The House of Eorl","pct":null,"appendix":true,"mins":2,"rs":431,"re":432,"date":"T.A. 2989–3002","era":"TA","yr":3001,"age":3},{"n":117,"code":"JC","book":"U","start":"A note to…","end":"…his mother's father.","where":"Part 3-I, Gladden Fields, Notes/Appendix (one paragraph)","pct":[68,68],"mins":2,"rs":285,"re":285,"date":"T.A. c. 2984","era":"TA","yr":3001,"age":3},{"n":118,"code":"VN","book":"R","start":"When Denethor became…","end":"…Tower of Ecthelion.","where":"Appendix A.I(iv), Gondor, The Stewards","pct":null,"appendix":true,"mins":2,"rs":412,"re":413,"date":"T.A. 2984–3017","era":"TA","yr":3001,"age":3},{"n":119,"code":"MA","book":"U","start":"Gollum was captured…","end":"…of the Gladden.","where":"Part 3-IV, The Hunt for the Ring, (i) Of the Journey of the Black Riders","pct":[81,81],"mins":2,"rs":339,"re":339,"date":"T.A. 3017","era":"TA","yr":3017,"age":3},{"n":120,"code":"ME","book":"U","start":"In D it is said…","end":"…strength of Gondor.","where":"Part 3-IV, The Hunt for the Ring, (ii) Other versions","pct":[82,82],"mins":6,"rs":344,"re":346,"date":"T.A. 3017–3018","era":"TA","yr":3017,"age":3},{"n":121,"code":"RB","book":"F","start":"There were rumours…","end":"…was tall and full.","where":"Book I ch. 2, The Shadow of the Past, rest, plus the opening of ch. 3, Three is Company","pct":[10,17],"mins":74,"rs":57,"re":89,"date":"T.A. 3018 (spring)","era":"TA","yr":3018,"age":3},{"n":122,"code":"MB","book":"U","start":"Now Sauron learning…","end":"…war against Gondor.","where":"Part 3-IV, The Hunt for the Ring, (i)","pct":[81,81],"mins":3,"rs":339,"re":340,"date":"T.A. 3018 (June)","era":"TA","yr":3018,"age":3},{"n":123,"code":"MF","book":"U","start":"In the event Gollum…","end":"…its main purpose.","where":"Part 3-IV, The Hunt for the Ring, (ii)","pct":[82,83],"mins":3,"rs":346,"re":347,"date":"T.A. 3018 (June)","era":"TA","yr":3018,"age":3},{"n":124,"code":"MC","book":"U","start":"Therefore when Osgiliath…","end":"…him with torture.","where":"Part 3-IV, The Hunt for the Ring, (i)","pct":[81,82],"mins":9,"rs":340,"re":343,"date":"T.A. 3018 (June–July)","era":"TA","yr":3018,"age":3},{"n":125,"code":"IK","book":"U","start":"Glanduin means…","end":"…and Minhiriath.","where":"Part 2-IV, Galadriel and Celeborn, Appendix D (end)","pct":[62,63],"mins":3,"rs":262,"re":263,"date":"T.A. 3018","era":"TA","yr":3018,"age":3},{"n":126,"code":"MH","book":"U","start":"When the Black…","end":"…the Barrow-downs.","where":"Part 3-IV, The Hunt for the Ring, (ii)","pct":[83,84],"mins":6,"rs":349,"re":351,"date":"T.A. 3018 (Sept)","era":"TA","yr":3018,"age":3},{"n":127,"code":"MD","book":"U","start":"Night was waning…","end":"…Rohan far behind.","where":"Part 3-IV, The Hunt for the Ring, (i), end","pct":[82,82],"mins":2,"rs":343,"re":343,"date":"T.A. 3018 (Sept)","era":"TA","yr":3018,"age":3},{"n":128,"code":"RC","book":"F","start":"Autumn was well…","end":"…road may wind much.","where":"Book I ch. 3 (from early on) through Book II ch. 3, The Ring Goes South; ends ≈ early in ch. 4, A Journey in the Dark (estimated)","pct":[16,76],"mins":731,"rs":89,"re":407,"date":"T.A. 3018 (Sept–Dec)","era":"TA","yr":3018,"age":3},{"n":129,"code":"MG","book":"U","start":"It seems clear that…","end":"…when they did.","where":"Part 3-IV, The Hunt for the Ring, (ii)","pct":[82,83],"mins":3,"rs":347,"re":348,"date":"T.A. 3019 (Jan)","era":"TA","yr":3019,"age":3},{"n":130,"code":"RD","book":"F","start":"After only a brief…","end":"…the Land of Shadow.","where":"Book II, rest of the book, to the end of ch. 10, The Breaking of the Fellowship","pct":[76,100],"mins":294,"rs":407,"re":535,"date":"T.A. 3019 (Jan–Feb 26)","era":"TA","yr":3019,"age":3},{"n":131,"code":"SA","book":"T","start":"Aragorn sped on…","end":"…in a stony land.","where":"Book III ch. 1, The Departure of Boromir, all","pct":[0,2],"mins":21,"rs":5,"re":14,"date":"T.A. 3019 (Feb 26)","era":"TA","yr":3019,"age":3},{"n":132,"code":"NA","book":"U","start":"The chief obstacles…","end":"…death of Theodred.","where":"Part 3-V, The Battles of the Fords of Isen (one paragraph)","pct":[85,85],"mins":2,"rs":359,"re":359,"date":"T.A. 3019 (Feb 25)","era":"TA","yr":3019,"age":3},{"n":133,"code":"NE","book":"U","start":"Marshal of the…","end":"…resist the invasion.","where":"Part 3-V, Fords of Isen, Appendix","pct":[88,89],"mins":3,"rs":371,"re":372,"date":"T.A. 3019","era":"TA","yr":3019,"age":3},{"n":134,"code":"NB","book":"U","start":"It was clearly…","end":"…Uruks had gone.","where":"Part 3-V, The Battles of the Fords of Isen","pct":[85,87],"mins":12,"rs":359,"re":363,"date":"T.A. 3019 (Feb 25–Mar 2)","era":"TA","yr":3019,"age":3},{"n":135,"code":"SC","book":"T","start":"Pippin lay in…","end":"…many watchful eyes.","where":"Book III ch. 3, The Uruk-hai, all","pct":[9,14],"mins":48,"rs":46,"re":67,"date":"T.A. 3019 (Feb 26–29)","era":"TA","yr":3019,"age":3},{"n":136,"code":"SB","book":"T","start":"Dusk deepened…","end":"…did not return.","where":"Book III ch. 2, The Riders of Rohan, all","pct":[2,9],"mins":69,"rs":15,"re":45,"date":"T.A. 3019 (Feb 26–30)","era":"TA","yr":3019,"age":3},{"n":137,"code":"SD","book":"T","start":"Meanwhile the hobbits…","end":"…be a black night.","where":"Book III ch. 4–6 (Treebeard, The White Rider, The King of the Golden Hall), plus the opening of ch. 7, Helm’s Deep","pct":[14,35],"mins":200,"rs":68,"re":155,"date":"T.A. 3019 (Feb 29–Mar 3)","era":"TA","yr":3019,"age":3},{"n":138,"code":"NC","book":"U","start":"So ended the First…","end":"…await the dawn.","where":"Part 3-V, The Battles of the Fords of Isen","pct":[86,88],"mins":15,"rs":363,"re":368,"date":"T.A. 3019 (Mar 2)","era":"TA","yr":3019,"age":3},{"n":139,"code":"SE","book":"T","start":"As the second day…","end":"…said the other.","where":"Book III ch. 7, Helm’s Deep (≈1 page)","pct":[34,35],"mins":5,"rs":155,"re":157,"date":"T.A. 3019 (Mar 3)","era":"TA","yr":3019,"age":3},{"n":140,"code":"ND","book":"U","start":"What followed is…","end":"…to join Erkenbrand.","where":"Part 3-V, The Battles of the Fords of Isen, end","pct":[88,88],"mins":2,"rs":368,"re":368,"date":"T.A. 3019 (Mar 3)","era":"TA","yr":3019,"age":3},{"n":141,"code":"SF","book":"T","start":"The host turned…","end":"…black night fell.","where":"Book III ch. 7, Helm’s Deep (rest), through Book IV ch. 7, Journey to the Cross-roads","pct":[35,88],"mins":529,"rs":157,"re":387,"date":"T.A. 3019 (Mar 3–10)","era":"TA","yr":3019,"age":3},{"n":142,"code":"TA","book":"R","start":"Pippin looked out…","end":"…through the dark.","where":"Book V ch. 1–3, plus ch. 4, The Siege of Gondor, up to ≈6 pages before its end","pct":[0,28],"mins":235,"rs":5,"re":107,"date":"T.A. 3019 (Mar 9–14)","era":"TA","yr":3019,"age":3},{"n":143,"code":"TC","book":"R","start":"It was dark…","end":"…even to the City.","where":"Book V ch. 5, The Ride of the Rohirrim, all","pct":[29,32],"mins":25,"rs":114,"re":125,"date":"T.A. 3019 (Mar 14–15)","era":"TA","yr":3019,"age":3},{"n":144,"code":"TB","book":"R","start":"Messengers came again…","end":"…had come at last.","where":"Book V ch. 4, The Siege of Gondor, final pages","pct":[27,29],"mins":14,"rs":107,"re":113,"date":"T.A. 3019 (Mar 15)","era":"TA","yr":3019,"age":3},{"n":145,"code":"TD","book":"R","start":"But it was no…","end":"…been but a dream.","where":"Book V ch. 6–8 (The Battle of the Pelennor Fields, The Pyre of Denethor, The Houses of Healing)","pct":[32,44],"mins":97,"rs":126,"re":168,"date":"T.A. 3019 (Mar 15–16)","era":"TA","yr":3019,"age":3},{"n":146,"code":"SG","book":"T","start":"Gollum was tugging…","end":"…taken by the Enemy.","where":"Book IV ch. 8–10 (The Stairs of Cirith Ungol, Shelob’s Lair, The Choices of Master Samwise)","pct":[88,100],"mins":117,"rs":388,"re":439,"date":"T.A. 3019 (Mar 11–13)","era":"TA","yr":3019,"age":3},{"n":147,"code":"TF","book":"R","start":"Sam roused himself…","end":"…deep untroubled sleep.","where":"Book VI ch. 1, The Tower of Cirith Ungol, plus the first part of ch. 2, The Land of Shadow","pct":[52,61],"mins":76,"rs":201,"re":234,"date":"T.A. 3019 (Mar 14–15)","era":"TA","yr":3019,"age":3},{"n":148,"code":"TE","book":"R","start":"The morning came…","end":"…eyes saw no more.","where":"Book V ch. 9–10 (The Last Debate, The Black Gate Opens)","pct":[44,52],"mins":64,"rs":169,"re":197,"date":"T.A. 3019 (Mar 16–25)","era":"TA","yr":3019,"age":3},{"n":149,"code":"TG","book":"R","start":"They woke together…","end":"…come to fulfilment.","where":"Book VI ch. 2 (rest) through ch. 5, The Steward and the King","pct":[61,80],"mins":156,"rs":234,"re":302,"date":"T.A. 3019 (Mar 15 – summer)","era":"TA","yr":3019,"age":3},{"n":150,"code":"ZC","book":"R","start":"At the same time…","end":"…King of the West.","where":"Appendix B, The Tale of Years, The Great Years","pct":null,"appendix":true,"mins":1,"rs":466,"re":466,"date":"T.A. 3019","era":"TA","yr":3019,"age":3},{"n":151,"code":"LC","book":"U","start":"After the crowning…","end":"…me) shall I speak more openly.","where":"Part 3-III, The Quest of Erebor, Appendix","pct":[78,79],"mins":3,"rs":329,"re":330,"date":"T.A. 3019 (told after the crowning)","era":"TA","yr":3019,"age":3},{"n":152,"code":"LA","book":"U","start":"I have not found…","end":"…in Middle-Earth.","where":"Part 3-III, The Quest of Erebor, main text","pct":[76,78],"mins":15,"rs":321,"re":326,"date":"T.A. 3019 (recalling 2941)","era":"TA","yr":3019,"age":3},{"n":153,"code":"LD","book":"U","start":"Then I said…","end":"…Took of Great Smials.","where":"Part 3-III, The Quest of Erebor, Appendix","pct":[78,79],"mins":6,"rs":330,"re":332,"date":"T.A. 3019","era":"TA","yr":3019,"age":3},{"n":154,"code":"LG","book":"U","start":"From this point the…","end":"…oversights often do.","where":"Part 3-III, The Quest of Erebor, Appendix (end)","pct":[80,80],"mins":3,"rs":336,"re":337,"date":"T.A. 3019","era":"TA","yr":3019,"age":3},{"n":155,"code":"TH","book":"R","start":"When the days…","end":"…back, he said.","where":"Book VI ch. 6–9 (Many Partings through The Grey Havens), to the end of the story","pct":[80,100],"mins":172,"rs":303,"re":378,"date":"T.A. 3019–3021","era":"TA","yr":3019,"age":3},{"n":156,"code":"CL","book":"S","start":"Now all these…","end":"…and of song.","where":"Of the Rings of Power, final paragraph","pct":[100,100],"mins":1,"rs":304,"re":304,"date":"T.A. 3021","era":"TA","yr":3021,"age":3},{"n":157,"code":"OE","book":"U","start":"Elendil and Gil-galad…","end":"…as a slow menace.","where":"Part 4-II, The Istari","pct":[95,96],"mins":3,"rs":400,"re":401,"date":"T.A. 3021","era":"TA","yr":3021,"age":3},{"n":158,"code":"OC","book":"U","start":"Indeed of all…","end":"…came never back.","where":"Part 4-II, The Istari","pct":[94,94],"mins":3,"rs":395,"re":396,"date":"T.A. 3021","era":"TA","yr":3021,"age":3},{"n":159,"code":"ZB","book":"R","start":"After the fall…","end":"…in Caras Galad [ h ] on.","where":"Appendix B, The Tale of Years, The Great Years","pct":null,"appendix":true,"mins":2,"rs":465,"re":466,"date":"Fo.A. 1 and after","era":"FO","yr":1,"age":3},{"n":160,"code":"ZD","book":"R","start":"1422: With the beginning…","end":"…as deputy mayor.","where":"Appendix B, Later Events Concerning the Members of the Fellowship","pct":null,"appendix":true,"mins":2,"rs":469,"re":470,"date":"S.R. 1422–1427 (Fo.A. 1–6)","era":"FO","yr":1,"age":3},{"n":161,"code":"JB","book":"U","start":"The story of…","end":"…not his worst.","where":"Part 3-I, The Disaster of the Gladden Fields, end of main text","pct":[65,66],"mins":6,"rs":274,"re":276,"date":"Early Fourth Age","era":"FO","yr":6,"age":3},{"n":162,"code":"UF","book":"R","start":"There were fifteen…","end":"…old was renewed.","where":"Appendix A.I(iii), Eriador, Arnor, and the Heirs of Isildur","pct":null,"appendix":true,"mins":2,"rs":394,"re":395,"date":"Early Fourth Age","era":"FO","yr":6,"age":3},{"n":163,"code":"XH","book":"R","start":"2991 - FA 63 (3084) Eomer…","end":"…Eomer grew old.","where":"Appendix A.II, The House of Eorl","pct":null,"appendix":true,"mins":2,"rs":432,"re":433,"date":"Fo.A. 1–63","era":"FO","yr":10,"age":3},{"n":164,"code":"ZE","book":"R","start":"1448: Master Samwise…","end":"…great of Gondor.","where":"Appendix B, Later Events Concerning the Members of the Fellowship","pct":null,"appendix":true,"mins":2,"rs":470,"re":471,"date":"S.R. 1448–1484 (Fo.A. 27–63)","era":"FO","yr":27,"age":3},{"n":165,"code":"WC","book":"R","start":"Thus the years…","end":"…days of old.","where":"Appendix A.I(v), The Tale of Aragorn and Arwen","pct":null,"appendix":true,"mins":7,"rs":420,"re":423,"date":"Fo.A. 120–121","era":"FO","yr":120,"age":3},{"n":166,"code":"YG","book":"R","start":"Gimli Gloin's son…","end":"…of this matter.","where":"Appendix A.III, Durin’s Folk","pct":null,"appendix":true,"mins":1,"rs":447,"re":447,"date":"Fo.A. 120","era":"FO","yr":120,"age":3},{"n":167,"code":"ZF","book":"R","start":"1541: In this year…","end":"…of the Ring.","where":"Appendix B, Later Events Concerning the Members of the Fellowship","pct":null,"appendix":true,"mins":1,"rs":471,"re":471,"date":"S.R. 1541 (Fo.A. 120)","era":"FO","yr":120,"age":3},{"n":168,"code":"QD","book":"F","start":"At the end of…","end":"…in Middle-Earth. (THE END)","where":"Prologue, Note on the Shire Records (the final listen)","pct":[3,4],"mins":5,"rs":19,"re":21,"date":"Later (the Shire records)","era":"FO","yr":121,"age":3}];
+const NAMES={S:"The Silmarillion",C:"The Children of Húrin",U:"Unfinished Tales",H:"The Hobbit",F:"The Fellowship of the Ring",T:"The Two Towers",R:"The Return of the King"};
+const ORDER=["S","C","U","H","F","T","R"];
+const AGES={1:["The First Age","From the Music of the Ainur to the War of Wrath"],2:["The Second Age","From the founding of Númenor to its Downfall"],3:["The Third Age","From the Last Alliance to the Grey Havens, and on into the Fourth Age"]};
+
+/* Editions, as listed by the original Chronological Tolkien calculator. The reference edition is the one the built-in table uses. */
+const ED={
+ L:{ref:"Lj",list:[["La",301,"Houghton Mifflin hardcovers (1965), ivory trade paperbacks, or red one-volume hardcover"],["Ld",328,"Del Rey paperbacks (2001 and later)"],["Lc",336,"Del Rey paperbacks (1993)"],["Lj",365,"HarperCollins paperbacks (1999)"],["Li",366,"Unwin / Unicorn paperbacks (1986)"],["Lb",372,"Ballantine paperbacks (1965)"],["Lg",998,"Houghton Mifflin trade paperbacks (1993 and later) or one-volume hardcover or paperback (2001)"],["Lk",1021,"HarperCollins hardcovers (2004–2014), or Houghton Mifflin one-volume hardcover or trade paperback (2004)"],["Lf",1033,"Illustrated three-volume hardcovers (2002)"],["Lm",1048,"HarperCollins illustrated one-volume hardcover (2014)"],["Le",1059,"Illustrated one-volume hardcover (1991)"],["Ll",1273,"Houghton Mifflin trade paperbacks (2004–05)"],["Lh",1336,"HarperCollins paperbacks (2007–2012)"]]},
+ S:{ref:"Sa",list:[["Sk",181,"HarperCollins De Luxe hardcover (2006–2007)"],["Sg",188,"HarperCollins (2022) illustrated hardcover"],["Sa",198,"Houghton Mifflin hardcover or trade paperback, or Allen & Unwin (1977, 2001, 2014)"],["Sf",199,"HarperCollins (1998) or Houghton Mifflin (2004) illustrated hardcover"],["Sh",235,"HarperCollins paperback (1999)"],["Sd",236,"Del Rey paperback (2001, 2002)"],["Sj",238,"Unwin paperback (1979) and Grafton paperback (1992)"],["Sb",242,"Ballantine paperback (1979)"]]},
+ U:{ref:"Ue",list:[["Uk",361,"HarperCollins De Luxe hardcover (2006, 2013)"],["Ua",377,"Houghton Mifflin hardcover or trade paperback, or Allen & Unwin (1980)"],["Ue",381,"Allen & Unwin (1980)"],["Uc",391,"Del Rey paperback (2020)"],["Ud",393,"Del Rey paperback (2001)"],["Uf",399,"Houghton Mifflin (Mariner Books) hardcover (2021)"],["Uh",487,"HarperCollins paperback (1998)"]]}
+};
+/* Chapter starts in the reference editions (page of the first paragraph), used to refine estimates. */
+const ANCH={
+ S:[["Ainulindalë",15],["Of the Fifth Battle (ch. 20)",188],["Of Túrin Turambar (ch. 21)",198],["Of Tuor and the Fall of Gondolin (ch. 23)",238],["Akallabêth",259],["Of the Rings of Power and the Third Age",285]],
+ U:[["Of Tuor and His Coming to Gondolin",3],["Aldarion and Erendis",165],["The Disaster of the Gladden Fields",269],["Cirion and Eorl",287],["The Quest of Erebor",321],["The Drúedain",381],["The Istari",393],["The Palantíri",409]],
+ F:[["Prologue",1],["A Long-expected Party",27],["Last page of “The Breaking of the Fellowship”",535]],
+ T:[["The Departure of Boromir",5],["The Uruk-hai",46],["Treebeard",68],["The Stairs of Cirith Ungol",388],["Last page of “The Choices of Master Samwise”",439]],
+ R:[["Minas Tirith",5],["The Ride of the Rohirrim",114],["The Battle of the Pelennor Fields",126],["The Last Debate",169],["The Tower of Cirith Ungol",201],["Many Partings",303],["The Grey Havens",365],["Appendix A",379],["Appendix B",448]]
+};
+const LOTR_CUM={F:0,T:545,R:995}, LOTR_GH_CUM=1360;
+const ERAS=[["VY","Days before days","V.Y. 1–3500",1,3500,8],["YT","Years of the Trees","Y.T. 1–1500",1,1500,9],["FA","First Age","to Y.S. 590",1,590,17],["SA","Second Age","S.A. 1–3441",1,3441,25],["TA","Third Age","T.A. 1–3021",1,3021,34],["FO","Fourth Age","Fo.A. 1–c. 2500 (shown to 130)",1,130,7]];
+
+/* ---------- storage ---------- */
+const KEY="ct-state-v1";
+const DEF={done:{},ed:{L:"Lj",S:"Sa",U:"Ue",C:"Ca"},anch:{},imp:null,speed:1,theme:"",hob:null};
+let st;
+try{st=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){st=Object.assign({},DEF)}
+st.ed=Object.assign({},DEF.ed,st.ed||{}); st.anch=st.anch||{}; st.done=st.done||{};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){} refreshBackup()}
+
+/* ---------- page mapping ---------- */
+function edPage(k){const e=ED[k].list.find(x=>x[0]===st.ed[k]);return e?e[1]:null}
+function isRef(k){return !ED[k]||st.ed[k]===ED[k].ref}
+function edKey(vol){return (vol==="F"||vol==="T"||vol==="R")?"L":vol}
+function continuous(){return (edPage("L")||365)>600}
+function presetSlope(vol){
+ const k=edKey(vol);
+ if(k==="C"||isRef(k))return 1;
+ if(k==="S")return edPage("S")/198;
+ if(k==="U")return edPage("U")/381;
+ const G=edPage("L"); return G>600?G/LOTR_GH_CUM:G/365;
+}
+function preset(vol,p){
+ const k=edKey(vol);
+ if(k==="C"||isRef(k))return p;
+ if(k==="L"&&continuous())return Math.round((LOTR_CUM[vol]+p)*edPage("L")/LOTR_GH_CUM);
+ return Math.max(1,Math.round(p*presetSlope(vol)));
+}
+function anchorsFor(vol){
+ const a=st.anch[vol]||{},out=[];
+ (ANCH[vol]||[]).forEach((x,i)=>{const v=parseInt(a[i],10);if(v>0)out.push([x[1],v])});
+ return out.sort((p,q)=>p[0]-q[0]);
+}
+function mapPage(vol,p){
+ const A=anchorsFor(vol);
+ if(A.length>=2){
+  let i=0; while(i<A.length-2&&p>A[i+1][0])i++;
+  const [r0,u0]=A[i],[r1,u1]=A[i+1]; const s=(u1-u0)/((r1-r0)||1);
+  return Math.max(1,Math.round(u0+(p-r0)*s));
+ }
+ if(A.length===1)return Math.max(1,Math.round(A[0][1]+(p-A[0][0])*presetSlope(vol)));
+ return preset(vol,p);
+}
+function accuracy(vol){
+ if(vol==="H")return "exact";
+ if(st.imp&&st.imp.count)return "exact";
+ const A=anchorsFor(vol);
+ if(isRef(edKey(vol))&&!A.length)return "exact";
+ if(A.length>=2)return "close";
+ return "rough";
+}
+function pagesFor(d){
+ if(d.book==="H"){const n=Math.max(1,Math.round(d.hobPages||0));return {txt:`≈ ${n} pages`,acc:"exact",s:0,e:n}}
+ let s,e,acc=accuracy(d.book);
+ if(st.imp&&st.imp.map&&st.imp.map[d.code]){[s,e]=st.imp.map[d.code];acc="exact"}
+ else{s=mapPage(d.book,d.rs);e=mapPage(d.book,d.re);if(e<s)e=s}
+ const pre=(d.book==="F"||d.book==="T"||d.book==="R")&&!continuous()?d.book+"-":"";
+ const txt=s===e?`p. ${pre}${s}`:`pp. ${pre}${s}–${e}`;
+ return {txt:(acc==="exact"?"":"≈ ")+txt,acc,s,e};
+}
+
+/* ---------- import parser (Chronological Tolkien custom table) ---------- */
+function parseTable(raw){
+ let t=raw;
+ if(/<\s*(table|td|tr|p|br)\b/i.test(t)){
+  t=t.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi," ").replace(/<br\s*\/?>/gi," ").replace(/<[^>]+>/g," ");
+  const ta=document.createElement("textarea");ta.innerHTML=t;t=ta.value;
+ }
+ t=t.replace(/[   \t\r\n]+/g," ").replace(/…/g,". . .").replace(/\.\s*\.\s*\./g," . . . ").replace(/\s+/g," ");
+ const map={};let m;
+ const startRe=/(\d{1,4}) ((?!\d+ [A-Za-z])(?!\.)(?:(?!\. \. \.|Go to ).){1,90}?) \. \. \. ([A-Z]{2})\b/g;
+ while((m=startRe.exec(t))){
+  const before=t[m.index-1];
+  if((before&&/[-\d\w]/.test(before))||/Go to [A-Z]{2} (?:[A-Z]-)?$/.test(t.slice(Math.max(0,m.index-14),m.index))){startRe.lastIndex=m.index+1;continue}
+  const code=m[3];
+  const rest=t.slice(startRe.lastIndex,startRe.lastIndex+400);
+  const em=/^\s*(\d{1,4}) \. \. \. /.exec(rest);
+  if(em&&!map[code]){map[code]=[parseInt(m[1],10),parseInt(em[1],10)]}
+ }
+ const known=new Set(DATA.filter(d=>d.book!=="H").map(d=>d.code));
+ Object.keys(map).forEach(k=>{if(!known.has(k))delete map[k]});
+ return map;
+}
+
+/* ---------- render checklist ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtMin=m=>m>=60?`≈${(m/60).toFixed(1)} h audio`:`≈${Math.max(1,Math.round(m))} min audio`;
+ORDER.forEach(b=>{const o=document.createElement("option");o.value=b;o.textContent=NAMES[b];$("filter").appendChild(o);
+ const s=document.createElement("span");s.style.setProperty("--c",`var(--${b})`);s.textContent=NAMES[b];$("legend").appendChild(s)});
+const rows={};
+[1,2,3].forEach(a=>{
+ const items=DATA.filter(d=>d.age===a);
+ const sec=document.createElement("section");sec.className="age";sec.id="age"+a;
+ sec.innerHTML=`<div class="age-head"><h2>${AGES[a][0]}</h2><span>steps ${items[0].n}–${items[items.length-1].n} · ${esc(AGES[a][1])}</span></div><ol class="steps"></ol>`;
+ const ol=sec.querySelector("ol");
+ items.forEach(d=>{
+  const li=document.createElement("li");li.className="step";li.id="s"+d.n;li.dataset.book=d.book;li.style.setProperty("--c",`var(--${d.book})`);
+  let pos="";
+  if(d.pct){const x=d.pct[0],z=Math.max(d.pct[1],x+1);pos=`<span class="pos" title="Position in the book">${x===d.pct[1]?x+"%":x+"–"+d.pct[1]+"%"} of book <span class="track"><i style="left:${x}%;width:${z-x}%"></i></span></span>`}
+  else if(d.book==="R"){pos=`<span class="flag">Appendix</span>`}
+  else if(d.book==="H"){pos=`<span>Whole chapters</span>`}
+  li.innerHTML=`<div class="num"><b>${d.n}</b><input type="checkbox" id="c${d.n}" aria-label="Mark step ${d.n} done"></div>
+  <div class="body"><div class="head"><span class="chip">${NAMES[d.book]}</span><span class="where">${esc(d.where)}</span></div>
+  <div class="date">${esc(d.date)}</div>
+  <div class="cues"><div><span class="k">Begins</span><q>${esc(d.start)}</q></div><div><span class="k">Stop after</span><q>${esc(d.end)}</q></div></div>
+  <div class="meta"><span class="pg" data-pg></span>${pos}<span data-min></span><span>section ${d.code}</span></div></div>`;
+  ol.appendChild(li);rows[d.n]=li;
+  const cb=li.querySelector("input");
+  cb.addEventListener("change",()=>{if(cb.checked)st.done[d.n]=1;else delete st.done[d.n];li.classList.toggle("done",cb.checked);save();updateProgress()});
+ });
+ $("ages").appendChild(sec);
+});
+function renderPages(){
+ DATA.forEach(d=>{const li=rows[d.n];const p=pagesFor(d);
+  li.querySelector("[data-pg]").textContent=p?p.txt:"any edition";
+  li.querySelector("[data-min]").textContent=fmtMin(d.mins/(+st.speed||1));});
+ const accs=new Set(["S","U","F","T","R"].map(accuracy));
+ const a=accs.has("rough")?["rough","Some pages are rough estimates"]:accs.has("close")?["close","Close estimates (±1–3 pages)"]:["ok","Exact for your editions"];
+ $("accSum").innerHTML=`<span class="badge ${a[0]==="ok"?"ok":""}">${a[1]}</span>`;
+}
+function renderChecks(){DATA.forEach(d=>{const on=!!st.done[d.n];rows[d.n].querySelector("input").checked=on;rows[d.n].classList.toggle("done",on)})}
+$("filter").addEventListener("change",()=>{const v=$("filter").value;
+ DATA.forEach(d=>rows[d.n].hidden=!!v&&d.book!==v);
+ [1,2,3].forEach(a=>{$("age"+a).hidden=!!v&&!DATA.some(d=>d.age===a&&d.book===v)})});
+$("next").addEventListener("click",()=>{const nx=DATA.find(d=>!st.done[d.n]);if(!nx)return;
+ if($("filter").value){$("filter").value="";$("filter").dispatchEvent(new Event("change"))}
+ document.querySelectorAll(".hl").forEach(x=>x.classList.remove("hl"));const el=rows[nx.n];el.classList.add("hl");
+ el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"})});
+
+/* ---------- progress ---------- */
+/* The Hobbit: chapter shares by length (ch. 1; ch. 2–9; ch. 10–19), and a typical pace of about 2.2 audio minutes per page */
+const HOB_SHARE={PA:.097,PB:.515,PC:.388},HOB_MPP=2.2,HOB_DEF_PAGES=300;
+function hobTotals(){
+ const h=st.hob;
+ if(h&&h.src==="pages"&&h.pages>0)return {pages:h.pages,mins:h.pages*HOB_MPP,src:"pages"};
+ if(h&&h.src==="audio"&&h.mins>0)return {pages:h.mins/HOB_MPP,mins:h.mins,src:"audio"};
+ return {pages:HOB_DEF_PAGES,mins:HOB_DEF_PAGES*HOB_MPP,src:null};
+}
+let TOTAL=0;
+function applyHobbit(){
+ const t=hobTotals();
+ DATA.forEach(d=>{if(d.book==="H"){d.mins=t.mins*HOB_SHARE[d.code];d.hobPages=t.pages*HOB_SHARE[d.code]}});
+ TOTAL=DATA.reduce((s,d)=>s+d.mins,0);
+ return t;
+}
+applyHobbit();
+/* Story years covered by each step, parsed from its date label */
+const YR_OVERRIDE={1:5466,21:10,28:3290,32:3790,36:4031,24:1,161:6,162:6,168:1};
+function yearsCovered(d){
+ if(YR_OVERRIDE[d.n]!=null)return YR_OVERRIDE[d.n];
+ const m=/(?:Fo|[FST])\.A\.\s*(?:c\.\s*)?(\d+)(?:\s*[–-]\s*(?:c\.\s*)?(\d+))?/.exec(d.date.replace(/^S\.R\.[^(]*\(/,""));
+ if(m&&m[2])return Math.max(1,+m[2]-+m[1]+1);
+ return 1;
+}
+function buildTimeline(){
+ $("tlEras").innerHTML=`<div class="tl-bands" id="tlBands"></div><div class="tl-yrs" id="tlYrs">${DATA.map(d=>{const y=yearsCovered(d);
+  return `<i data-n="${d.n}" style="--w:${y};--c:var(--${d.book})" data-y="${y}"></i>`}).join("")}</div>`;
+ $("tlLegend").innerHTML=ERAS.map(e=>`<div><b>${esc(e[1])}</b> · ${esc(e[2])}</div>`).join("");
+}
+/* Era bands are placed from tick positions. Step 1 spans Before days (3500 yr), the Years of the Trees (1500 yr) and the first 466 years of the First Age, so those eras start inside its tick. */
+const STEP1_YRS=5466,ERA_IN_STEP1={VY:0,YT:3500,FA:5000};
+function placeBands(){
+ const box=$("tlBands"),q=box.getBoundingClientRect(),ticks=[...document.querySelectorAll("#tlYrs i")];
+ const t1=ticks[0].getBoundingClientRect();
+ const starts=ERAS.map(e=>{
+  if(e[0] in ERA_IN_STEP1)return t1.left-q.left+t1.width*ERA_IN_STEP1[e[0]]/STEP1_YRS;
+  const i=DATA.findIndex(d=>d.era===e[0]);return i<0?null:ticks[i].getBoundingClientRect().left-q.left});
+ const end=ticks[ticks.length-1].getBoundingClientRect().right-q.left;
+ const bands=ERAS.map((e,i)=>({e,x:starts[i]})).filter(b=>b.x!=null);
+ box.innerHTML=bands.map((b,i)=>{const x2=i+1<bands.length?bands[i+1].x:end,w=x2-b.x;
+  const nm=b.e[1].replace(" Age","").replace("Days before days","Before days").replace("Years of the Trees","Trees");
+  return `<div style="left:${b.x}px;width:${w}px" title="${esc(b.e[1])}">${w>nm.length*7+10?esc(nm):""}</div>`}).join("");
+}
+buildTimeline();
+function placeMark(n){
+ const t=document.querySelector(`#tlYrs i[data-n="${n}"]`);if(!t)return;
+ placeBands();
+ const inner=document.querySelector(".tl-in"),r=t.getBoundingClientRect(),q=inner.getBoundingClientRect();
+ const x=r.left-q.left+r.width/2;$("tlMark").style.left=x+"px";const lab=$("tlLab"),lw=lab.offsetWidth;lab.style.left=Math.min(Math.max(-lw/2,-x),q.width-x-lw)+"px";
+ const sc=$("tlScroll");if(sc.scrollWidth>sc.clientWidth)sc.scrollTo({left:Math.max(0,x-sc.clientWidth/2),behavior:"auto"});
+}
+new ResizeObserver(()=>{if(window._tlCur)placeMark(window._tlCur)}).observe(document.querySelector(".tl-in"));
+
+/* tick popup: hover with a mouse, tap on touch screens */
+(function(){
+ const tip=document.createElement("div");tip.className="tl-tip";tip.setAttribute("role","tooltip");document.body.appendChild(tip);
+ let cur=null;
+ function hide(){tip.style.display="none";if(cur)cur.classList.remove("sel");cur=null}
+ function show(t){
+  if(cur)cur.classList.remove("sel");cur=t;t.classList.add("sel");
+  const d=DATA.find(x=>x.n==t.dataset.n),y=+t.dataset.y;
+  tip.innerHTML=`<b>Step ${d.n}${st.done[d.n]?" · done":""}</b>${esc(d.date)}<br>${esc(NAMES[d.book])}, ${esc(d.where)}<br>Covers ${y.toLocaleString()} story year${y>1?"s":""}`;
+  tip.style.display="block";
+  const r=t.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+  tip.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+"px";
+  tip.style.top=(r.bottom+h+14>innerHeight&&r.top>h+14?r.top-h-8:r.bottom+8)+"px";
+ }
+ const tl=$("tlScroll");
+ tl.addEventListener("pointerover",e=>{if(e.pointerType==="mouse"){const t=e.target.closest("#tlYrs i");t?show(t):hide()}});
+ tl.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")hide()});
+ tl.addEventListener("click",e=>{const t=e.target.closest("#tlYrs i");if(!t){hide();return}if(t===cur&&tip.style.display==="block")hide();else show(t)});
+ document.addEventListener("click",e=>{if(!tl.contains(e.target))hide()});
+ tl.addEventListener("scroll",hide,{passive:true});addEventListener("scroll",hide,{passive:true});
+})();
+function updateProgress(){
+ const doneSteps=DATA.filter(d=>st.done[d.n]);const n=doneSteps.length;
+ const mins=doneSteps.reduce((s,d)=>s+d.mins,0);const pct=Math.round(100*mins/TOTAL);
+ $("meter").style.width=pct+"%";
+ const nx=DATA.find(d=>!st.done[d.n]);
+ $("ptxt").textContent=`${n} of ${DATA.length} steps · ${pct}%`+(nx?` · next: step ${nx.n}, ${NAMES[nx.book]}`:" · finished");
+ $("ovPct").textContent=pct+"%";$("ovMeter").style.width=pct+"%";
+ const left=(TOTAL-mins)/(+st.speed||1)/60;
+ const rest=DATA.filter(d=>!st.done[d.n]);
+ let pgLeft=0;rest.forEach(d=>{const p=pagesFor(d);if(p)pgLeft+=Math.max(p.e-p.s,0.5)});
+ $("ovSub").innerHTML=`${n} of ${DATA.length} steps<br>≈${left.toFixed(0)} h of audio left<br>≈${Math.round(pgLeft).toLocaleString()} pages left`;
+ $("perBook").innerHTML=ORDER.map(b=>{const all=DATA.filter(d=>d.book===b),dn=all.filter(d=>st.done[d.n]);
+  const t=all.reduce((s,d)=>s+d.mins,0),m=dn.reduce((s,d)=>s+d.mins,0),p=Math.round(100*m/t);
+  return `<div class="pbook" style="--c:var(--${b})"><span class="nm">${NAMES[b]}</span><span class="pc">${p}%</span><div class="meter"><i style="width:${p}%"></i></div><span class="sub">${dn.length} of ${all.length} steps</span></div>`}).join("");
+ document.querySelectorAll("#tlYrs i").forEach(i=>i.classList.toggle("on",!!st.done[i.dataset.n]));
+ const cur=nx||DATA[DATA.length-1];
+ window._tlCur=cur.n;placeMark(cur.n);
+ $("tlNow").textContent=nx?`Next up, step ${nx.n}: ${nx.date}. ${NAMES[nx.book]}, ${nx.where}.`:"You have finished the whole saga.";
+}
+
+/* ---------- settings ---------- */
+function fillEd(k,selId,descId){
+ const sel=$(selId);sel.innerHTML=ED[k].list.map(e=>`<option value="${e[0]}">${e[1]}</option>`).join("");
+ sel.value=st.ed[k];
+ const desc=()=>{const e=ED[k].list.find(x=>x[0]===sel.value);$(descId).textContent=(e?e[2]:"")+(sel.value===ED[k].ref?" · built-in table, exact pages":" · pages estimated; refine or import below")};
+ desc();
+ sel.addEventListener("change",()=>{st.ed[k]=sel.value;desc();save();renderPages();renderAnchors()});
+}
+fillEd("L","edL","edLd");fillEd("S","edS","edSd");fillEd("U","edU","edUd");
+function renderAnchors(){
+ const box=$("anchorBox");
+ box.innerHTML=["S","U","F","T","R"].map(v=>`<h3 style="margin-top:14px">${NAMES[v]}</h3><div class="anchors">${ANCH[v].map((a,i)=>{
+  const val=(st.anch[v]||{})[i]||"";const ph=preset(v,a[1]);
+  return `<span>${esc(a[0])}</span><input inputmode="numeric" pattern="[0-9]*" id="an-${v}-${i}" data-v="${v}" data-i="${i}" value="${esc(val)}" placeholder="${ph}" aria-label="${esc(a[0])} page">`}).join("")}</div>`).join("");
+ box.querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{const v=inp.dataset.v,i=inp.dataset.i;st.anch[v]=st.anch[v]||{};
+  const n=parseInt(inp.value,10);if(n>0)st.anch[v][i]=n;else delete st.anch[v][i];save();renderPages()}));
+}
+renderAnchors();
+$("clearAnchors").addEventListener("click",()=>{st.anch={};save();renderAnchors();renderPages()});
+function doImport(text,label){
+ const map=parseTable(text);const count=Object.keys(map).length;
+ const need=DATA.filter(d=>d.book!=="H").length;
+ if(count<20){$("impStatus").textContent=`No table found${label?" in "+label:""}. Make sure it is the customized page from the Chronological Tolkien calculator.`;return}
+ st.imp={map,count};save();renderPages();
+ $("impStatus").textContent=`Imported ${count} of ${need} sections${label?" from "+label:""}.`+(count<need?" Sections that were not found use the estimates.":" All page ranges are now exact.");
+}
+$("impBtn").addEventListener("click",()=>doImport($("impText").value,""));
+$("impFile").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>doImport(String(r.result),f.name);r.readAsText(f,"windows-1252")});
+$("impClear").addEventListener("click",()=>{st.imp=null;save();renderPages();$("impStatus").textContent="Imported table removed."});
+if(st.imp&&st.imp.count)$("impStatus").textContent=`Using an imported table (${st.imp.count} sections).`;
+function renderHobbit(skip){
+ const t=applyHobbit();
+ const P=$("hobPages"),H=$("hobH"),M=$("hobM");
+ const hh=Math.floor(Math.round(t.mins)/60),mm=Math.round(t.mins)%60;
+ if(skip!=="pages"){P.value=t.src?String(Math.round(t.pages)):"";P.placeholder=String(Math.round(t.pages));P.classList.toggle("est",t.src!=="pages")}
+ if(skip!=="audio"){H.value=t.src?String(hh):"";M.value=t.src?String(mm):"";H.placeholder=String(hh);M.placeholder=String(mm);
+  H.classList.toggle("est",t.src!=="audio");M.classList.toggle("est",t.src!=="audio")}
+ $("hobD").textContent=t.src==="pages"?"Audiobook length estimated from your page count":t.src==="audio"?"Page count estimated from your audiobook length":"Using a typical edition: about 300 pages and 11 hours of audio";
+}
+$("hobPages").addEventListener("input",()=>{const n=parseInt($("hobPages").value,10);
+ if(n>0)st.hob={src:"pages",pages:n};else if(st.hob&&st.hob.src==="pages")st.hob=null;
+ $("hobPages").classList.remove("est");save();renderHobbit("pages");renderPages();updateProgress()});
+["hobH","hobM"].forEach(id=>$(id).addEventListener("input",()=>{const h=parseInt($("hobH").value,10)||0,m=parseInt($("hobM").value,10)||0,t=h*60+m;
+ if(t>0)st.hob={src:"audio",mins:t};else if(st.hob&&st.hob.src==="audio")st.hob=null;
+ $("hobH").classList.remove("est");$("hobM").classList.remove("est");save();renderHobbit("audio");renderPages();updateProgress()}));
+renderHobbit();
+$("speed").value=String(st.speed||1);
+$("speed").addEventListener("change",()=>{st.speed=+$("speed").value;save();renderPages();updateProgress()});
+function applyTheme(){if(st.theme)document.documentElement.setAttribute("data-theme",st.theme);else document.documentElement.removeAttribute("data-theme")}
+$("theme").value=st.theme||"";applyTheme();
+$("theme").addEventListener("change",()=>{st.theme=$("theme").value;applyTheme();save()});
+function refreshBackup(){try{$("backup").value=btoa(unescape(encodeURIComponent(JSON.stringify(st))))}catch(e){}}
+$("bkCopy").addEventListener("click",()=>{const v=$("backup").value;
+ (navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>$("bkStatus").textContent="Code copied.").catch(()=>{$("backup").select();$("bkStatus").textContent="Code selected. Copy it from the box."})});
+$("bkRestore").addEventListener("click",()=>{try{const o=JSON.parse(decodeURIComponent(escape(atob($("backup").value.trim()))));
+ st=Object.assign({},DEF,o);st.ed=Object.assign({},DEF.ed,o.ed||{});st.anch=o.anch||{};st.done=o.done||{};save();location.reload()}
+ catch(e){$("bkStatus").textContent="That code could not be read. Copy the whole code and try again."}});
+let armed=false;
+$("reset").addEventListener("click",()=>{const b=$("reset");if(!armed){armed=true;b.textContent="Tap again to clear";setTimeout(()=>{armed=false;b.textContent="Clear all checkmarks"},3000);return}
+ st.done={};save();renderChecks();updateProgress();armed=false;b.textContent="Clear all checkmarks";$("bkStatus").textContent="All checkmarks cleared."});
+
+/* ---------- tabs ---------- */
+const TABS=["checklist","progress","howto","settings"];const scrollPos={};let curTab=null;
+function show(t){if(!TABS.includes(t))t="checklist";if(curTab)scrollPos[curTab]=scrollY;
+ TABS.forEach(x=>$("tab-"+x).hidden=x!==t);
+ document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t?"true":"false"));
+ curTab=t;scrollTo(0,scrollPos[t]||0);}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{show(b.dataset.tab);try{history.replaceState(null,"","#"+b.dataset.tab)}catch(e){/* previews in sandboxed frames block this; the tab still switches */}}));
+window.addEventListener("hashchange",()=>show(location.hash.slice(1)));
+
+renderChecks();renderPages();updateProgress();refreshBackup();show(location.hash.slice(1));
+</script>
+</body>
+</html>
